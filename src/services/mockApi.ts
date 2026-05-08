@@ -13,20 +13,22 @@ export const mockAuthService = {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Mock user database
-    const users = [
+    // Get users from localStorage (includes demo users + registered users)
+    const storedUsers = localStorage.getItem('registeredUsers')
+    const demoUsers = [
       { id: '1', email: 'admin@medicinefinder.com', password: 'password', role: 'admin', name: 'Admin User', phone: '+250788123456', createdAt: new Date().toISOString() },
+      { id: '1-alt', email: 'admin@medifender.com', password: 'password', role: 'admin', name: 'Admin User', phone: '+250788123456', createdAt: new Date().toISOString() },
       { id: '2', email: 'pharmacist@medicinefinder.com', password: 'password', role: 'pharmacist', name: 'Pharmacist User', phone: '+250788789012', createdAt: new Date().toISOString() },
       { id: '3', email: 'user@medicinefinder.com', password: 'password', role: 'user', name: 'Regular User', phone: '+250788345678', createdAt: new Date().toISOString() }
     ]
+    const registeredUsers = storedUsers ? JSON.parse(storedUsers) : []
+    const allUsers = [...demoUsers, ...registeredUsers]
     
-    const user = users.find(u => u.email === email && u.password === password)
+    const user = allUsers.find(u => u.email === email && u.password === password)
     
     if (user) {
-      // Check if selected role matches user's actual role
-      if (selectedRole && user.role !== selectedRole) {
-        return { success: false, error: `This account is registered as a ${user.role}, not a ${selectedRole}` }
-      }
+      // Auto-detect role based on user credentials (no manual selection needed)
+      const detectedRole = user.role
       
       const { password, ...userWithoutPassword } = user
       
@@ -40,7 +42,7 @@ export const mockAuthService = {
         action: 'login',
         role: user.role,
         timestamp: new Date().toISOString(),
-        details: `User ${user.name} logged in as ${user.role}`
+        details: `User ${user.name} logged in as ${user.role} (auto-detected)`
       }
       
       // Save activity log
@@ -48,7 +50,7 @@ export const mockAuthService = {
       activities.push(activity)
       localStorage.setItem('systemActivities', JSON.stringify(activities))
       
-      return { success: true, data: userWithoutPassword }
+      return { success: true, data: { ...userWithoutPassword, role: detectedRole } }
     }
     
     return { success: false, error: 'Invalid credentials' }
@@ -57,14 +59,50 @@ export const mockAuthService = {
   signUp: async (userData: any): Promise<MockResponse<any>> => {
     await new Promise(resolve => setTimeout(resolve, 1000))
     
+    // Get existing registered users
+    const storedUsers = localStorage.getItem('registeredUsers')
+    const registeredUsers = storedUsers ? JSON.parse(storedUsers) : []
+    
+    // Check if email already exists
+    const demoUsers = [
+      { email: 'admin@medicinefinder.com' },
+      { email: 'admin@medifender.com' },
+      { email: 'pharmacist@medicinefinder.com' },
+      { email: 'user@medicinefinder.com' }
+    ]
+    const allExistingUsers = [...demoUsers, ...registeredUsers]
+    const emailExists = allExistingUsers.some(u => u.email === userData.email)
+    
+    if (emailExists) {
+      return { success: false, error: 'Email already registered' }
+    }
+    
+    // Auto-detect role based on email like in signIn
+    let detectedRole: string = 'user' // default role
+    if (userData.email.includes('admin')) {
+      detectedRole = 'admin'
+    } else if (userData.email.includes('pharmacist')) {
+      detectedRole = 'pharmacist'
+    } else if (userData.email.includes('user') || userData.email.includes('patient')) {
+      detectedRole = 'user'
+    }
+    
     const newUser = {
       id: Date.now().toString(),
       ...userData,
       createdAt: new Date().toISOString()
     }
     
-    localStorage.setItem('currentUser', JSON.stringify(newUser))
-    return { success: true, data: newUser }
+    // Save to registered users array
+    registeredUsers.push(newUser)
+    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers))
+    
+    // Also save as current user for session with role
+    const { password, ...userWithoutPassword } = newUser
+    const userWithRole = { ...userWithoutPassword, role: detectedRole }
+    localStorage.setItem('currentUser', JSON.stringify(userWithRole))
+    
+    return { success: true, data: userWithRole }
   },
   
   signOut: async (): Promise<MockResponse<void>> => {

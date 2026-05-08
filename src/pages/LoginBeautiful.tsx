@@ -23,7 +23,9 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  Star
+  Star,
+  UserPlus,
+  CheckCircle
 } from 'lucide-react'
 
 const Login = () => {
@@ -31,14 +33,13 @@ const Login = () => {
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true)
-  const [selectedRole, setSelectedRole] = useState('user')
+  // Remove role selection - auto-detect based on credentials
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
-    role: 'user'
+    phone: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -48,42 +49,7 @@ const Login = () => {
 
   const { name, email, password, confirmPassword, phone } = formData
 
-  const roles = [
-    {
-      value: 'admin',
-      label: 'Administrator',
-      icon: Shield,
-      description: 'Full system control and management',
-      color: 'from-violet-600 to-purple-600',
-      bgColor: 'from-violet-50 to-purple-50',
-      borderColor: 'border-violet-200',
-      hoverBg: 'hover:from-violet-100 hover:to-purple-100',
-      features: ['Complete Access', 'User Management', 'System Analytics']
-    },
-    {
-      value: 'pharmacist',
-      label: 'Pharmacist',
-      icon: Stethoscope,
-      description: 'Manage inventory and process orders',
-      color: 'from-blue-600 to-cyan-600',
-      bgColor: 'from-blue-50 to-cyan-50',
-      borderColor: 'border-blue-200',
-      hoverBg: 'hover:from-blue-100 hover:to-cyan-100',
-      features: ['Medicine Management', 'Order Processing', 'Inventory Control']
-    },
-    {
-      value: 'user',
-      label: 'Customer',
-      icon: UserIcon,
-      description: 'Search and buy medicines',
-      color: 'from-emerald-600 to-teal-600',
-      bgColor: 'from-emerald-50 to-teal-50',
-      borderColor: 'border-emerald-200',
-      hoverBg: 'hover:from-emerald-100 hover:to-teal-100',
-      features: ['Browse Medicines', 'Quick Ordering', 'Home Delivery']
-    }
-  ]
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -100,25 +66,26 @@ const Login = () => {
         }
         
         // Add debugging
-        console.log('Login attempt:', { email, password: '***', selectedRole })
+        console.log('Login attempt:', { email, password: '***' })
         
-        const success = await login(email, password, selectedRole)
+        const success = await login(email, password)
         console.log('Login success:', success)
         
-        if (success) {
-          console.log(`Login successful for ${selectedRole}`)
+        if (success && typeof success === 'object' && success.role) {
+          console.log(`Login successful for ${success.role}`)
           setError('')
           
           // Add success notification
           addNotification({
             title: 'Login Successful',
-            message: `Welcome back! You are logged in as ${selectedRole}`,
+            message: `Welcome back! You are logged in as ${success.role}`,
             type: 'success'
           })
           
-          // Immediate navigation
+          // Immediate navigation - auto-detect role from login response
           setTimeout(() => {
-            switch (selectedRole) {
+            const userRole = success.role
+            switch (userRole) {
               case 'admin':
                 console.log('Navigating to admin dashboard')
                 navigate('/admin/dashboard')
@@ -136,10 +103,10 @@ const Login = () => {
             }
           }, 500)
         } else {
-          setError('Invalid credentials. Please use the demo credentials shown below.')
+          setError('Invalid email or password. Please check your credentials or register for a new account.')
           addNotification({
             title: 'Login Failed',
-            message: 'Invalid credentials. Please check your email and password.',
+            message: 'Invalid credentials. Please check your email and password or register for a new account.',
             type: 'error'
           })
         }
@@ -157,12 +124,40 @@ const Login = () => {
           return
         }
         
-        const success = await register(name, email, password, phone, selectedRole)
+        const success = await register(name, email, password, phone, 'user') // Default role, will be overridden by auto-detection
         
-        if (success) {
-          setSuccess('Registration successful! Please sign in.')
-          setIsLogin(true)
+        if (success && typeof success === 'object' && success.role) {
+          setSuccess('Registration successful! You are now logged in.')
           setError('')
+          
+          // Add success notification with role
+          addNotification({
+            title: 'Registration Successful',
+            message: `Your account has been created successfully! You are logged in as ${success.role}`,
+            type: 'success'
+          })
+          
+          // Navigate to appropriate dashboard based on detected role
+          setTimeout(() => {
+            const userRole = success.role
+            switch (userRole) {
+              case 'admin':
+                console.log('Navigating to admin dashboard after registration')
+                navigate('/admin/dashboard')
+                break
+              case 'pharmacist':
+                console.log('Navigating to pharmacist dashboard after registration')
+                navigate('/pharmacist/dashboard')
+                break
+              case 'user':
+                console.log('Navigating to patient dashboard after registration')
+                navigate('/patient/dashboard')
+                break
+              default:
+                console.log('Default navigation to patient dashboard')
+                navigate('/patient/dashboard')
+            }
+          }, 1000)
         } else {
           setError('Registration failed. Please try again.')
         }
@@ -315,59 +310,13 @@ const Login = () => {
                 </h3>
                 <p className="text-gray-600">
                   {isLogin 
-                    ? 'Choose your role and enter your credentials' 
+                    ? 'Enter your credentials to access your account' 
                     : 'Join our healthcare community today'
                   }
                 </p>
               </div>
 
-              {/* Enhanced Role Selection */}
-              <div className="mb-8">
-                <label className="block text-sm font-semibold text-gray-700 mb-4">Select Your Role</label>
-                <div className="space-y-3">
-                  {roles.map((role) => {
-                    const Icon = role.icon
-                    return (
-                      <button
-                        key={role.value}
-                        type="button"
-                        onClick={() => setSelectedRole(role.value as 'admin' | 'pharmacist' | 'user')}
-                        className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 ${role.borderColor} ${
-                          selectedRole === role.value
-                            ? `border-opacity-100 bg-gradient-to-r ${role.bgColor} shadow-lg`
-                            : 'border-opacity-30 bg-white/50 hover:border-opacity-60'
-                        } ${role.hoverBg}`}
-                      >
-                        <div className="flex items-start space-x-4">
-                          <div className={`p-3 rounded-xl bg-gradient-to-r ${role.color} text-white shadow-md`}>
-                            <Icon className="h-6 w-6" />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <h4 className="font-bold text-gray-900 text-lg">{role.label}</h4>
-                            <p className="text-gray-600 text-sm mb-2">{role.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              {role.features.map((feature, index) => (
-                                <span key={index} className="inline-flex items-center text-xs bg-white/60 px-2 py-1 rounded-full">
-                                  <CheckCircle2 className="h-3 w-3 mr-1 text-green-600" />
-                                  {feature}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                          {selectedRole === role.value && (
-                            <div className="ml-auto">
-                              <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                                <CheckCircle2 className="h-5 w-5 text-white" />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
+              
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Registration Only Fields */}
@@ -413,7 +362,7 @@ const Login = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      placeholder={`Enter ${selectedRole} email`}
+                      placeholder="Enter your email address"
                       className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
                       required
                     />
@@ -499,73 +448,27 @@ const Login = () => {
                 </button>
               </form>
 
-              {/* Enhanced Demo Credentials */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
+              {/* User Registration Info */}
+              <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200">
                 <div className="flex items-center space-x-2 mb-3">
-                  <Sparkles className="h-5 w-5 text-indigo-600" />
-                  <p className="text-sm font-semibold text-indigo-800">Demo Credentials:</p>
+                  <UserPlus className="h-5 w-5 text-green-600" />
+                  <p className="text-sm font-semibold text-green-800">New to Medicine Finder?</p>
                 </div>
+                <p className="text-sm text-green-700 mb-4">
+                  Create your account to access our complete healthcare platform. Register as a patient to browse medicines, manage prescriptions, and connect with pharmacies.
+                </p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
-                    <span className="font-medium text-indigo-700">Admin:</span>
-                    <span className="text-indigo-600">admin@medicinefinder.com / password</span>
+                  <div className="flex items-center space-x-2 bg-white/60 rounded-lg px-3 py-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-green-700">Free registration</span>
                   </div>
-                  <div className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
-                    <span className="font-medium text-indigo-700">Pharmacist:</span>
-                    <span className="text-indigo-600">pharmacist@medicinefinder.com / password</span>
+                  <div className="flex items-center space-x-2 bg-white/60 rounded-lg px-3 py-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-green-700">Instant access</span>
                   </div>
-                  <div className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
-                    <span className="font-medium text-indigo-700">User:</span>
-                    <span className="text-indigo-600">user@medicinefinder.com / password</span>
-                  </div>
-                </div>
-                
-                {/* Quick Login Buttons */}
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs font-semibold text-indigo-700 mb-2">Quick Login:</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          email: 'admin@medicinefinder.com',
-                          password: 'password'
-                        })
-                        setSelectedRole('admin')
-                      }}
-                      className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700"
-                    >
-                      Admin
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          email: 'pharmacist@medicinefinder.com',
-                          password: 'password'
-                        })
-                        setSelectedRole('pharmacist')
-                      }}
-                      className="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-blue-700"
-                    >
-                      Pharmacist
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          email: 'user@medicinefinder.com',
-                          password: 'password'
-                        })
-                        setSelectedRole('user')
-                      }}
-                      className="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-emerald-700"
-                    >
-                      User
-                    </button>
+                  <div className="flex items-center space-x-2 bg-white/60 rounded-lg px-3 py-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-green-700">Secure account</span>
                   </div>
                 </div>
               </div>

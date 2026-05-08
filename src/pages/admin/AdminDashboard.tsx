@@ -167,7 +167,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: `${stats.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'from-emerald-500 to-emerald-600',
       bgColor: 'from-emerald-50 to-emerald-100',

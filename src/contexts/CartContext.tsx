@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import type { Medicine } from '../data/rwandaMedicines'
+import type { Medicine } from '../types'
 
 interface CartItem {
   medicine: Medicine

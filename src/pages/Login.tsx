@@ -453,7 +453,7 @@ const Login = () => {
             <div className="mt-6 p-4 bg-blue-50 rounded-xl">
               <p className="text-sm font-medium text-blue-800 mb-2">Demo Credentials:</p>
               <div className="space-y-1 text-xs text-blue-700">
-                <p>Admin: admin@medicinefinder.com / password</p>
+                <p>Admin: admin@medicinefinder.com or admin@medifender.com / password</p>
                 <p>Pharmacist: pharmacist@medicinefinder.com / password</p>
                 <p>User: user@medicinefinder.com / password</p>
               </div>

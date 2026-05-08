@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../contexts/CartContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { rwandanMedicines, rwandanPharmacies, getPharmacyById } from '../data/rwandaMedicines'
+import { Medicine } from '../types'
 import { MapPin, Phone, AlertTriangle, Package, Heart, Eye, Clock, Shield, Truck, Users, Sparkles, Zap, Award, BarChart3, Target, Stethoscope, ChevronDown, X, CheckCircle2, AlertCircle, Search, ShoppingCart, Star, Filter, SlidersHorizontal } from 'lucide-react'
 import MedicalDisclaimer from '../components/MedicalDisclaimer'
 import MedicalEmergency from '../components/MedicalEmergency'
 import MedicalInformation from '../components/MedicalInformation'
 
-// Import the Medicine interface from rwandaMedicines.ts
-type Medicine = import('../data/rwandaMedicines').Medicine
 
 const MedicineSearch = () => {
   const { addToCart } = useCart()
@@ -103,7 +102,7 @@ const MedicineSearch = () => {
   const handleAddToCart = (medicine: Medicine) => {
     console.log('Adding to cart:', medicine)
     try {
-      addToCart(medicine, 1, 'pharmacy-001')
+      addToCart(medicine as any, 1, 'pharmacy-001')
       console.log('Successfully added to cart')
 
       addNotification({

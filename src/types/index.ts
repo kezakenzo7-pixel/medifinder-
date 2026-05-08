@@ -28,19 +28,38 @@ export interface User {
 export interface Medicine {
   id: string
   name: string
+  genericName: string
   description: string
   category: string
   manufacturer: string
-  price: number
   priceRWF: number
+  priceUSD?: number
   stock: number
-  dosage: string
+  rating: number
+  reviews: number
   prescriptionRequired: boolean
+  inStock: boolean
+  dosage: string
+  form: 'tablet' | 'capsule' | 'syrup' | 'injection' | 'cream' | 'ointment' | 'drops'
+  expiryDate: string
+  batchNumber: string
+  storageConditions: string
+  sideEffects: string[]
+  contraindications: string[]
+  availablePharmacies: {
+    pharmacyId: string
+    quantity: number
+    lastUpdated: string
+  }[]
+  badge?: string
+  discount?: number
+  features?: string[]
   imageUrl?: string
-  createdAt: Date
-  updatedAt: Date
-  addedBy: string
+  createdAt?: Date
+  updatedAt?: Date
+  addedBy?: string
   pharmacyId?: string
+  price?: number
 }
 
 export interface Pharmacy {

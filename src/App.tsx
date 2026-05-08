@@ -20,6 +20,9 @@ import PharmacistMedicineCRUD from './components/PharmacistMedicineCRUD'
 import PatientDashboard from './pages/patient/PatientDashboard'
 import PatientProfile from './pages/patient/PatientProfile'
 import PatientPrescriptions from './pages/patient/PatientPrescriptions'
+import AddUser from './pages/admin/AddUser'
+import AddPharmacy from './pages/admin/AddPharmacy'
+import PaymentNotifications from './pages/admin/PaymentNotifications'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ 
@@ -126,6 +129,24 @@ function AppRoutes() {
       } />
       
       {/* Admin Routes */}
+      <Route path="/admin/users/add" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <Layout><AddUser /></Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/pharmacies/add" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <Layout><AddPharmacy /></Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/payments" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <Layout><PaymentNotifications /></Layout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/admin/medicines" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <Layout><AdminMedicineCRUD /></Layout>

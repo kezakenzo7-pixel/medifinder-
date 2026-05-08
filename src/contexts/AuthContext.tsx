@@ -4,9 +4,9 @@ import { mockAuthService } from '../services/mockApi'
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string, role: string) => Promise<boolean>
+  login: (email: string, password: string, role?: string) => Promise<boolean | User>
   logout: () => void
-  register: (name: string, email: string, password: string, phone: string, role: string) => Promise<boolean>
+  register: (name: string, email: string, password: string, phone: string, role?: string) => Promise<boolean | User>
   updateUser: (userData: User) => void
   isLoading: boolean
 }
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string, role: string): Promise<boolean> => {
+  const login = async (email: string, password: string, role?: string): Promise<boolean | User> => {
     setIsLoading(true)
     
     try {
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (result.success && result.data) {
         setUser(result.data)
         console.log('User set in context:', result.data)
-        return true
+        return result.data
       }
       console.log('Login failed:', result.error)
       return false
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('currentUser', JSON.stringify(userData))
   }
 
-  const register = async (name: string, email: string, password: string, phone: string, role: string): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string, phone: string, role: string): Promise<boolean | User> => {
     setIsLoading(true)
     
     try {
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (result.success && result.data) {
         setUser(result.data)
-        return true
+        return result.data
       }
       return false
     } catch (error) {

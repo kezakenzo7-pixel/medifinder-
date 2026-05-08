@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../contexts/CartContext'
+import { Medicine } from '../types'
 import { 
   ShoppingCart, 
   Plus, 
@@ -182,10 +183,10 @@ const Cart = () => {
                             {/* Price */}
                             <div className="text-right">
                               <div className="text-sm text-gray-500">
-                                ${item.medicine.price} × {item.quantity}
+                                ${item.medicine.priceRWF} × {item.quantity}
                               </div>
                               <div className="text-lg font-bold text-gray-900">
-                                ${(item.medicine.price * item.quantity).toFixed(2)}
+                                ${(item.medicine.priceRWF * item.quantity).toFixed(2)}
                               </div>
                             </div>
                           </div>

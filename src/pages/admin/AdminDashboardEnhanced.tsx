@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { rwandanMedicines } from '../../data/rwandaMedicines'
+import { Order, Medicine, User } from '../../types'
 import { 
   Users, 
   Package, 
@@ -58,7 +59,7 @@ interface SystemActivity {
   type: 'login' | 'create' | 'update' | 'delete' | 'order'
 }
 
-interface User {
+interface AdminUser {
   id: string
   name: string
   email: string
@@ -69,26 +70,6 @@ interface User {
   status: 'active' | 'inactive' | 'suspended'
 }
 
-interface Order {
-  id: string
-  customerName: string
-  customerEmail: string
-  pharmacyName: string
-  amount: number
-  status: string
-  date: string
-  items: number
-}
-
-interface Medicine {
-  id: string
-  name: string
-  category: string
-  manufacturer: string
-  price: number
-  stock: number
-  status: 'in-stock' | 'low-stock' | 'out-of-stock'
-}
 
 const AdminDashboard = () => {
   const { user } = useAuth()
@@ -103,7 +84,7 @@ const AdminDashboard = () => {
     todayRevenue: 0
   })
   const [activities, setActivities] = useState<SystemActivity[]>([])
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<AdminUser[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -132,7 +113,7 @@ const AdminDashboard = () => {
     setOrders(savedOrders)
 
     // Mock user data
-    const mockUsers: User[] = [
+    const mockUsers: AdminUser[] = [
       { id: '1', name: 'Admin User', email: 'admin@medicinefinder.com', role: 'admin', phone: '+250788123456', createdAt: '2024-01-01', lastLogin: new Date().toISOString(), status: 'active' },
       { id: '2', name: 'Pharmacist User', email: 'pharmacist@medicinefinder.com', role: 'pharmacist', phone: '+250788789012', createdAt: '2024-01-02', lastLogin: new Date().toISOString(), status: 'active' },
       { id: '3', name: 'Regular User', email: 'user@medicinefinder.com', role: 'user', phone: '+250788345678', createdAt: '2024-01-03', lastLogin: new Date().toISOString(), status: 'active' }
@@ -382,7 +363,7 @@ Revenue Generated: $${todayOrders.reduce((sum, order) => sum + order.totalAmount
     },
     {
       title: 'Today\'s Revenue',
-      value: `$${stats.todayRevenue.toLocaleString()}`,
+      value: `${stats.todayRevenue.toLocaleString()}`,
       icon: TrendingUp,
       color: 'from-pink-500 to-pink-600',
       bgColor: 'from-pink-50 to-pink-100',
@@ -423,9 +404,9 @@ Revenue Generated: $${todayOrders.reduce((sum, order) => sum + order.totalAmount
   )
 
   const filteredOrders = orders.filter(order =>
-    (order.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (order.pharmacyName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (order.status?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    (order.id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (order.status?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (order.deliveryAddress?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
   return (

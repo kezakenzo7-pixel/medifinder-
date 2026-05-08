@@ -214,7 +214,7 @@ const MedicineSearch = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <div className="text-2xl font-bold text-gray-900">
-                        ${(medicine as any)?.priceRWF?.toFixed(2) || '0.00'}
+                        {(medicine as any)?.priceRWF?.toFixed(2) || '0.00'}
                       </div>
                       <div className={`text-sm font-medium ${
                         (medicine as any)?.stock > 10 ? 'text-green-600' : 

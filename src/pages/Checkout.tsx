@@ -30,7 +30,7 @@ const Checkout = () => {
   const location = useLocation()
   const { user } = useAuth()
   const [cart, setCart] = useState<CartItem[]>([])
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'upi' | 'netbanking'>('card')
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'mobilemoney' | 'cash' | 'card' | 'upi' | 'netbanking'>('mobilemoney')
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('delivery')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -76,6 +76,7 @@ const Checkout = () => {
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 3000))
     
+    const totals = calculateTotal()
     const newOrder: Order = {
       id: 'ORD' + Date.now(),
       userId: user?.id || 'guest',
@@ -87,7 +88,7 @@ const Checkout = () => {
         price: (item.medicine as any).priceRWF || item.medicine.price,
         totalPrice: ((item.medicine as any).priceRWF || item.medicine.price) * item.quantity
       })),
-      totalAmount: calculateTotal().total,
+      totalAmount: totals.total,
       status: 'confirmed',
       paymentStatus: 'paid',
       paymentMethod: selectedPaymentMethod,
@@ -99,10 +100,39 @@ const Checkout = () => {
       updatedAt: new Date()
     }
 
-    // Save order (in real app, this would be an API call)
+    // Save order
     const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
     existingOrders.push(newOrder)
     localStorage.setItem('orders', JSON.stringify(existingOrders))
+    
+    // Create payment notification for mobile money receiver
+    const paymentNotification = {
+      id: Date.now().toString(),
+      orderId: newOrder.id,
+      amount: totals.total,
+      paymentMethod: selectedPaymentMethod,
+      payerName: user?.name || 'Guest User',
+      payerPhone: phoneNumber,
+      receiverPhone: '+250788123456', // Pharmacy phone number
+      receiverName: 'MediCare+ Pharmacy',
+      status: 'received',
+      timestamp: new Date().toISOString(),
+      message: `Payment of RWF ${totals.total.toFixed(2)} received for order ${newOrder.id}`,
+      type: 'payment_received'
+    }
+    
+    // Save payment notification
+    const existingNotifications = JSON.parse(localStorage.getItem('paymentNotifications') || '[]')
+    existingNotifications.push(paymentNotification)
+    localStorage.setItem('paymentNotifications', JSON.stringify(existingNotifications))
+    
+    // Send SMS notification (simulated)
+    if (selectedPaymentMethod === 'mobilemoney') {
+      console.log('SMS sent to receiver:', {
+        to: paymentNotification.receiverPhone,
+        message: `You have received RWF ${totals.total.toFixed(2)} from ${paymentNotification.payerName}. Order ID: ${newOrder.id}. Thank you for using MediCare+!`
+      })
+    }
     
     setOrderId(newOrder.id)
     setOrderPlaced(true)
@@ -114,6 +144,14 @@ const Checkout = () => {
   }
 
   const paymentMethods = [
+    {
+      id: 'mobilemoney',
+      name: 'Mobile Money',
+      icon: Smartphone,
+      description: 'MoMo, Airtel Money, Tigo Cash',
+      color: 'from-green-500 to-green-600',
+      bgColor: 'from-green-50 to-green-100'
+    },
     {
       id: 'card',
       name: 'Credit/Debit Card',
@@ -127,16 +165,16 @@ const Checkout = () => {
       name: 'UPI',
       icon: Smartphone,
       description: 'Google Pay, PhonePe, Paytm',
-      color: 'from-green-500 to-green-600',
-      bgColor: 'from-green-50 to-green-100'
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'from-purple-50 to-purple-100'
     },
     {
       id: 'netbanking',
       name: 'Net Banking',
       icon: Building,
       description: 'All major banks supported',
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'from-purple-50 to-purple-100'
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'from-indigo-50 to-indigo-100'
     },
     {
       id: 'cash',
